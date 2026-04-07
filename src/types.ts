@@ -42,9 +42,9 @@ export interface PolicyState {
 }
 
 export const INITIAL_POLICY: PolicyState = {
-  vatRate: 16,
-  corporateTaxRate: 12,
-  incomeTaxRate: 25,
+  vatRate: 19,
+  corporateTaxRate: 15,
+  incomeTaxRate: 30,
   ehegattensplitting: true,
   migrationSpending: 20,
   foreignAid: 10,

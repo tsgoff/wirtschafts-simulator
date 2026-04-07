@@ -8,9 +8,9 @@ export function simulateYear(
   const baseGdpGrowth = 0.8; // Base growth trend for 2026+
   
   // Tax impacts on growth (Libertarian model: lower taxes = higher growth boost)
-  const vatImpact = (16 - policy.vatRate) * 0.15; 
-  const corpTaxImpact = (12 - policy.corporateTaxRate) * 0.25;
-  const incomeTaxImpact = (25 - policy.incomeTaxRate) * 0.12;
+  const vatImpact = (19 - policy.vatRate) * 0.15; 
+  const corpTaxImpact = (15 - policy.corporateTaxRate) * 0.25;
+  const incomeTaxImpact = (30 - policy.incomeTaxRate) * 0.12;
   
   // Spending impacts
   const infraImpact = (policy.infrastructureSpending - 40) * 0.02;
@@ -93,7 +93,7 @@ export function simulateYear(
   
   // Inflation impact
   const growthInflationImpact = (totalGrowth - 1.0) * 0.2;
-  const vatInflationImpact = (policy.vatRate - 16) * 0.35;
+  const vatInflationImpact = (policy.vatRate - 19) * 0.35;
   const energyTaxInflationImpact = (policy.energyTaxRate - 80) * 0.02 + (policy.co2Price - 25) * 0.025;
   const newInflation = Math.max(-1.0, currentEconomy.inflation + growthInflationImpact + vatInflationImpact + energyTaxInflationImpact);
   
