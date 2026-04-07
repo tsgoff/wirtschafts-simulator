@@ -154,6 +154,13 @@ export default function App() {
                 trend={economy.competitiveness > 50 ? 'up' : 'down'}
               />
               <StatCard 
+                label="Staatsquote" 
+                value={`${economy.govSpendingRatio.toFixed(1)}%`} 
+                icon={<ShieldCheck className="w-5 h-5 text-slate-500" />}
+                trend={economy.govSpendingRatio < 40 ? 'up' : 'down'}
+                invertTrend
+              />
+              <StatCard 
                 label="Energiekosten" 
                 value={`${economy.energyCosts.toFixed(0)}`} 
                 icon={<Zap className="w-5 h-5 text-amber-500" />}
@@ -298,28 +305,35 @@ export default function App() {
                     <PolicySlider 
                       label="CO2-Preis" 
                       value={policy.co2Price} 
-                      min={0} max={250} unit=" €/t" 
+                      min={0} max={150} unit=" €/t" 
                       onChange={(v) => updatePolicy('co2Price', v)}
                       icon={<Zap className="w-4 h-4 text-emerald-500" />}
                     />
                     <PolicySlider 
                       label="Energiesteuer" 
                       value={policy.energyTaxRate} 
-                      min={0} max={300} unit="%" 
+                      min={0} max={200} unit="%" 
                       onChange={(v) => updatePolicy('energyTaxRate', v)}
                       icon={<Zap className="w-4 h-4 text-amber-500" />}
                     />
                     <PolicySlider 
                       label="Mehrwertsteuer" 
                       value={policy.vatRate} 
-                      min={7} max={25} unit="%" 
+                      min={0} max={25} unit="%" 
                       onChange={(v) => updatePolicy('vatRate', v)}
                       icon={<Percent className="w-4 h-4" />}
                     />
                     <PolicySlider 
+                      label="Einkommensteuer" 
+                      value={policy.incomeTaxRate} 
+                      min={0} max={50} unit="%" 
+                      onChange={(v) => updatePolicy('incomeTaxRate', v)}
+                      icon={<Euro className="w-4 h-4" />}
+                    />
+                    <PolicySlider 
                       label="Körperschaftsteuer" 
                       value={policy.corporateTaxRate} 
-                      min={5} max={35} unit="%" 
+                      min={0} max={35} unit="%" 
                       onChange={(v) => updatePolicy('corporateTaxRate', v)}
                       icon={<Euro className="w-4 h-4" />}
                     />
@@ -336,6 +350,13 @@ export default function App() {
                       min={10} max={100} unit="%" 
                       onChange={(v) => updatePolicy('adminEfficiency', v)}
                       icon={<Activity className="w-4 h-4" />}
+                    />
+                    <PolicySlider 
+                      label="Privatisierungsgrad" 
+                      value={policy.privatizationLevel} 
+                      min={0} max={100} unit="%" 
+                      onChange={(v) => updatePolicy('privatizationLevel', v)}
+                      icon={<TrendingUp className="w-4 h-4" />}
                     />
                     <PolicySlider 
                       label="Renteneintrittsalter" 
@@ -359,6 +380,20 @@ export default function App() {
                         active={policy.ehegattensplitting}
                         icon={<Heart className="w-5 h-5 text-rose-500" />}
                         onToggle={() => updatePolicy('ehegattensplitting', !policy.ehegattensplitting)}
+                      />
+                      <PolicyToggle 
+                        label="Nord Stream" 
+                        description="Gas-Pipeline in Betrieb nehmen"
+                        active={policy.nordStreamActive}
+                        icon={<Zap className={cn("w-5 h-5", policy.nordStreamActive ? "text-blue-500" : "text-slate-400")} />}
+                        onToggle={() => updatePolicy('nordStreamActive', !policy.nordStreamActive)}
+                      />
+                      <PolicyToggle 
+                        label="Atomenergie" 
+                        description="Kernkraftwerke reaktivieren"
+                        active={policy.nuclearPowerActive}
+                        icon={<Zap className={cn("w-5 h-5", policy.nuclearPowerActive ? "text-amber-400" : "text-slate-400")} />}
+                        onToggle={() => updatePolicy('nuclearPowerActive', !policy.nuclearPowerActive)}
                       />
                     </div>
                   </div>
@@ -385,7 +420,7 @@ export default function App() {
                     <PolicySlider 
                       label="Migration" 
                       value={policy.migrationSpending} 
-                      min={10} max={100} unit=" Mrd." 
+                      min={0} max={100} unit=" Mrd." 
                       onChange={(v) => updatePolicy('migrationSpending', v)}
                       icon={<Globe className="w-4 h-4" />}
                     />
@@ -406,21 +441,21 @@ export default function App() {
                     <PolicySlider 
                       label="Schlüsseltechnologien" 
                       value={policy.keyTechInvestment} 
-                      min={5} max={100} unit=" Mrd." 
+                      min={0} max={100} unit=" Mrd." 
                       onChange={(v) => updatePolicy('keyTechInvestment', v)}
                       icon={<Zap className="w-4 h-4 text-amber-500" />}
                     />
                     <PolicySlider 
                       label="Energiewende" 
                       value={policy.energyTransitionSpending} 
-                      min={10} max={120} unit=" Mrd." 
+                      min={0} max={120} unit=" Mrd." 
                       onChange={(v) => updatePolicy('energyTransitionSpending', v)}
                       icon={<Zap className="w-4 h-4 text-emerald-500" />}
                     />
                     <PolicySlider 
                       label="Digitalisierung" 
                       value={policy.digitalizationInvestment} 
-                      min={5} max={80} unit=" Mrd." 
+                      min={0} max={80} unit=" Mrd." 
                       onChange={(v) => updatePolicy('digitalizationInvestment', v)}
                       icon={<Zap className="w-4 h-4" />}
                     />

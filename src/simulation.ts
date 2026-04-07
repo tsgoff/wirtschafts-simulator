@@ -7,29 +7,36 @@ export function simulateYear(
   // Base values and sensitivities
   const baseGdpGrowth = 0.8; // Base growth trend for 2026+
   
-  // Tax impacts on growth
-  const vatImpact = (19 - policy.vatRate) * 0.12; 
-  const corpTaxImpact = (15 - policy.corporateTaxRate) * 0.18;
-  const incomeTaxImpact = (30 - policy.incomeTaxRate) * 0.08;
+  // Tax impacts on growth (Libertarian model: lower taxes = higher growth boost)
+  const vatImpact = (16 - policy.vatRate) * 0.15; 
+  const corpTaxImpact = (12 - policy.corporateTaxRate) * 0.25;
+  const incomeTaxImpact = (25 - policy.incomeTaxRate) * 0.12;
   
   // Spending impacts
-  const infraImpact = (policy.infrastructureSpending - 50) * 0.025;
-  const eduImpact = (policy.educationSpending - 40) * 0.015;
-  const digitalImpact = (policy.digitalizationInvestment - 10) * 0.04;
-  const defenseImpact = (policy.defenseSpending - 52) * 0.005; // Small industrial boost
-  const energyImpact = (policy.energyTransitionSpending - 20) * 0.01; // Short term cost, long term independence
-  const keyTechImpact = (policy.keyTechInvestment - 15) * 0.05; // High growth potential
+  const infraImpact = (policy.infrastructureSpending - 40) * 0.02;
+  const eduImpact = (policy.educationSpending - 35) * 0.01;
+  const digitalImpact = (policy.digitalizationInvestment - 5) * 0.03;
+  const defenseImpact = (policy.defenseSpending - 60) * 0.005; 
+  const energyImpact = (policy.energyTransitionSpending - 10) * 0.005; 
+  const keyTechImpact = (policy.keyTechInvestment - 10) * 0.04; 
   
   // Structural impacts
-  const retirementImpact = (policy.retirementAge - 67) * 0.2; // Higher retirement age = more labor force
+  const retirementImpact = (policy.retirementAge - 68) * 0.25; 
+  const privatizationImpact = (policy.privatizationLevel - 40) * 0.02; // Boosts efficiency/growth
   
   // Interest rate impact (higher rates = lower growth)
   const interestImpact = (currentEconomy.interestRate - 2.0) * -0.3;
   
+  // Nord Stream impact (cheaper gas = more growth)
+  const nordStreamGrowthImpact = policy.nordStreamActive ? 0.5 : 0;
+  
+  // Nuclear power impact (reliable base load = growth boost)
+  const nuclearGrowthImpact = policy.nuclearPowerActive ? 0.3 : 0;
+  
   const totalGrowth = baseGdpGrowth + vatImpact + corpTaxImpact + incomeTaxImpact + 
                      infraImpact + eduImpact + digitalImpact + defenseImpact + 
-                     energyImpact + keyTechImpact +
-                     retirementImpact + interestImpact;
+                     energyImpact + keyTechImpact + privatizationImpact +
+                     retirementImpact + interestImpact + nordStreamGrowthImpact + nuclearGrowthImpact;
   
   const newGdp = currentEconomy.gdp * (1 + totalGrowth / 100);
   
@@ -37,20 +44,21 @@ export function simulateYear(
   const vatRevenue = (newGdp * 0.32) * (policy.vatRate / 100);
   const corpRevenue = (newGdp * 0.12) * (policy.corporateTaxRate / 100);
   const incomeRevenue = (newGdp * 0.42) * (policy.incomeTaxRate / 100);
-  const co2Revenue = (policy.co2Price * 0.5); // Simplified: 0.5 Mrd € per €/tonne
-  const energyTaxRevenue = 40 * (policy.energyTaxRate / 100);
-  const otherRevenue = 120;
+  const co2Revenue = (policy.co2Price * 0.4); 
+  const energyTaxRevenue = 30 * (policy.energyTaxRate / 100);
+  const privatizationRevenue = (policy.privatizationLevel > 40) ? (policy.privatizationLevel - 40) * 2 : 0;
+  const otherRevenue = 100;
   
-  const totalRevenue = vatRevenue + corpRevenue + incomeRevenue + co2Revenue + energyTaxRevenue + otherRevenue;
+  const totalRevenue = vatRevenue + corpRevenue + incomeRevenue + co2Revenue + energyTaxRevenue + privatizationRevenue + otherRevenue;
   
   // Expenses calculation
   // Retirement age reduces pension costs
-  const pensionSavings = (policy.retirementAge - 67) * 15;
-  const socialSpending = Math.max(300, 420 - pensionSavings + (policy.ehegattensplitting ? 22 : 0));
+  const pensionSavings = (policy.retirementAge - 68) * 18;
+  const socialSpending = Math.max(200, 350 - pensionSavings + (policy.ehegattensplitting ? 20 : 0));
   
-  // Admin costs based on efficiency
-  const baseAdminCosts = 250;
-  const adminCosts = baseAdminCosts * (1.5 - policy.adminEfficiency / 100);
+  // Admin costs based on efficiency and privatization
+  const baseAdminCosts = 220;
+  const adminCosts = baseAdminCosts * (1.6 - (policy.adminEfficiency + policy.privatizationLevel / 2) / 100);
   
   let totalExpenses = 
     socialSpending + 
@@ -84,23 +92,30 @@ export function simulateYear(
   const newUnemployment = Math.max(2.5, currentEconomy.unemployment + growthUnemploymentImpact);
   
   // Inflation impact
-  const growthInflationImpact = (totalGrowth - 1.0) * 0.25;
-  const vatInflationImpact = (policy.vatRate - 19) * 0.4;
-  const energyTaxInflationImpact = (policy.energyTaxRate - 100) * 0.02 + (policy.co2Price - 45) * 0.03;
-  const newInflation = Math.max(-0.5, currentEconomy.inflation + growthInflationImpact + vatInflationImpact + energyTaxInflationImpact);
+  const growthInflationImpact = (totalGrowth - 1.0) * 0.2;
+  const vatInflationImpact = (policy.vatRate - 16) * 0.35;
+  const energyTaxInflationImpact = (policy.energyTaxRate - 80) * 0.02 + (policy.co2Price - 25) * 0.025;
+  const newInflation = Math.max(-1.0, currentEconomy.inflation + growthInflationImpact + vatInflationImpact + energyTaxInflationImpact);
   
   // Popularity impact
   let popularityChange = 0;
-  if (totalGrowth > 1.5) popularityChange += 4;
-  if (totalGrowth < 0) popularityChange -= 12;
-  if (newUnemployment > 6.5) popularityChange -= 6;
-  if (newInflation > 3.5) popularityChange -= 10;
-  if (budgetBalance < -60) popularityChange -= 5;
+  if (totalGrowth > 2.0) popularityChange += 5;
+  if (totalGrowth < 0) popularityChange -= 15;
+  if (newUnemployment > 7.0) popularityChange -= 8;
+  if (newInflation > 4.0) popularityChange -= 12;
+  
+  // Minarchist popularity: People like low taxes but hate radical cuts
+  if (totalRevenue / newGdp < 0.35) popularityChange += 3; // Tax relief bonus
+  if (totalExpenses / newGdp > 0.45) popularityChange -= 4; // Taxpayer burden penalty
+  
   if (!policy.ehegattensplitting) popularityChange -= 4;
-  if (policy.retirementAge > 67) popularityChange -= (policy.retirementAge - 67) * 8;
-  if (policy.migrationSpending > 60) popularityChange -= 4;
-  if (policy.debtBrakeActive && budgetBalance < 0) popularityChange -= 2; // Austerity pain
-  if (policy.co2Price > 100) popularityChange -= 5; // CO2 price backlash
+  if (policy.retirementAge > 68) popularityChange -= (policy.retirementAge - 68) * 10;
+  if (policy.migrationSpending > 50) popularityChange -= 5;
+  if (policy.debtBrakeActive && budgetBalance < 0) popularityChange -= 3; 
+  if (policy.co2Price > 80) popularityChange -= 6; 
+  if (policy.nordStreamActive) popularityChange -= 15; 
+  if (policy.nuclearPowerActive) popularityChange -= 10; // Protest from green voters
+  if (policy.privatizationLevel > 70) popularityChange -= 5; // Fear of selling out state assets
   
   const newPopularity = Math.min(100, Math.max(0, currentEconomy.popularity + popularityChange));
 
@@ -113,58 +128,62 @@ export function simulateYear(
   const feedback: string[] = [];
 
   // Growth feedback
-  if (totalGrowth > 2.5) feedback.push("Wirtschaftsboom! Die Unternehmen investieren kräftig.");
-  else if (totalGrowth > 1.0) feedback.push("Solides Wachstum stärkt den Standort Deutschland.");
-  else if (totalGrowth < 0) feedback.push("Rezession! Die Wirtschaft schrumpft, Unternehmen sind besorgt.");
+  if (totalGrowth > 3.0) feedback.push("Wirtschaftswunder! Der schlanke Staat entfesselt ungeahnte Kräfte.");
+  else if (totalGrowth > 1.5) feedback.push("Solides Wachstum durch marktwirtschaftliche Reformen.");
+  else if (totalGrowth < 0) feedback.push("Rezession! Trotz Reformen schwächelt die Konjunktur.");
   
   // Inflation feedback
-  if (newInflation > 4.0) feedback.push("Hohe Inflation! Die Bürger leiden unter steigenden Preisen.");
-  else if (newInflation < 0.5) feedback.push("Deflationsgefahr! Die Preise stagnieren, was den Konsum lähmen könnte.");
-
+  if (newInflation > 4.0) feedback.push("Inflation steigt! Die Geldentwertung belastet die Sparer.");
+  
   // Budget feedback
-  if (budgetBalance > 10) feedback.push("Haushaltsüberschuss! Sie haben Spielraum für Investitionen oder Steuersenkungen.");
-  else if (budgetBalance < -80) feedback.push("Massives Defizit! Die Staatsverschuldung steigt rasant an.");
+  const govSpendingRatio = (totalExpenses / newGdp) * 100;
+  if (govSpendingRatio < 35) feedback.push("Vorbildlich: Die Staatsquote ist auf einem minarchistischen Niveau.");
+  else if (govSpendingRatio > 50) feedback.push("Warnung: Die Staatsquote ist zu hoch. Der Staat erstickt die Privatwirtschaft.");
+
+  if (budgetBalance > 20) feedback.push("Haushaltsüberschuss! Zeit für weitere Steuersenkungen.");
   
   // Policy specific feedback
-  if (policy.retirementAge > 68) feedback.push("Proteste gegen die Rentenreform! Die Gewerkschaften sind auf der Straße.");
-  if (policy.vatRate > 21) feedback.push("Die Mehrwertsteuererhöhung drückt auf die Konsumlaune.");
-  if (policy.corporateTaxRate < 12) feedback.push("Niedrige Unternehmenssteuern locken ausländische Investoren an.");
-  if (policy.digitalizationInvestment > 40) feedback.push("Die Digitalisierungsoffensive zeigt erste Erfolge in der Verwaltung.");
-  if (policy.debtBrakeActive && budgetBalance < -10) feedback.push("Die Schuldenbremse erzwingt harte Sparmaßnahmen.");
+  if (policy.privatizationLevel > 60) feedback.push("Privatisierungsschub: Der Staat zieht sich aus der Wirtschaft zurück.");
+  if (policy.incomeTaxRate < 20) feedback.push("Niedrige Einkommensteuern belohnen Leistung und Eigenverantwortung.");
+  if (policy.adminEfficiency > 80) feedback.push("Effiziente Verwaltung: Bürokratie ist kaum noch ein Hindernis.");
   
   // Energy & Tech feedback
-  const draghiGap = 150 - (policy.keyTechInvestment + policy.energyTransitionSpending + policy.digitalizationInvestment);
-  if (draghiGap > 50) {
-    feedback.push(`Warnung: Die Investitionslücke (Draghi-Gap) beträgt ${draghiGap} Mrd. € pro Jahr. Wir verlieren den Anschluss an die USA und China.`);
+  const draghiGap = 120 - (policy.keyTechInvestment + policy.energyTransitionSpending + policy.digitalizationInvestment);
+  if (draghiGap > 40) {
+    feedback.push(`Investitionslücke: Der Markt wartet auf bessere Rahmenbedingungen.`);
   }
-
-  if (policy.energyTransitionSpending < 30) feedback.push("Kritik: Ohne eigene Öl- und Gasvorkommen bleibt die Energiewende alternativlos, wird aber aktuell unterfinanziert.");
-  else feedback.push("Investitionen in die Energiewende reduzieren langfristig die Abhängigkeit von teuren Öl- und Gasimporten.");
 
   // Competitiveness logic
   const newCompetitiveness = Math.min(100, Math.max(0, 
     currentEconomy.competitiveness + 
-    (policy.keyTechInvestment - 20) * 0.2 + 
-    (policy.digitalizationInvestment - 15) * 0.15 +
-    (policy.adminEfficiency - 50) * 0.2 - // Efficiency boost
-    (policy.corporateTaxRate - 15) * 0.3 -
-    (policy.co2Price - 45) * 0.05 // High CO2 price hurts competitiveness
+    (policy.keyTechInvestment - 10) * 0.15 + 
+    (policy.digitalizationInvestment - 5) * 0.1 +
+    (policy.adminEfficiency - 60) * 0.25 + 
+    (policy.privatizationLevel - 40) * 0.3 -
+    (policy.corporateTaxRate - 12) * 0.4 -
+    (policy.co2Price - 25) * 0.08
   ));
 
   // Energy cost logic
-  const newEnergyCosts = Math.max(80, 
+  const newEnergyCosts = Math.max(70, 
     currentEconomy.energyCosts - 
-    (policy.energyTransitionSpending - 20) * 0.5 -
-    (policy.energySubsidies * 0.8) + // Direct subsidy impact
-    (policy.co2Price - 45) * 0.4 + // CO2 price impact
-    (policy.energyTaxRate - 100) * 0.3 + // Energy tax impact
-    (newInflation * 2)
+    (policy.energyTransitionSpending - 10) * 0.4 -
+    (policy.energySubsidies * 0.5) -
+    (policy.nordStreamActive ? 35 : 0) -
+    (policy.nuclearPowerActive ? 25 : 0) + // Nuclear lowers costs
+    (policy.co2Price - 25) * 0.5 + 
+    (policy.energyTaxRate - 80) * 0.4 + 
+    (newInflation * 1.5)
   );
 
   if (newEnergyCosts > 180) feedback.push("Alarm: Die hohen Energiekosten führen zur Deindustrialisierung!");
   if (policy.adminEfficiency < 30) feedback.push("Bürokratie-Stau: Die Verwaltung ist überlastet und bremst die Wirtschaft.");
   if (policy.energySubsidies > 40) feedback.push("Hohe Energiesubventionen belasten den Haushalt massiv.");
   if (policy.co2Price > 120) feedback.push("Der hohe CO2-Preis belastet die Industrie und den Verkehrssektor.");
+  if (policy.nordStreamActive) feedback.push("Nord Stream ist in Betrieb: Günstiges Gas stützt die Industrie, führt aber zu massiver internationaler Kritik.");
+  else feedback.push("Nord Stream bleibt außer Betrieb: Die Energieversorgung muss ohne russisches Pipeline-Gas gesichert werden.");
+  if (policy.nuclearPowerActive) feedback.push("Kernkraftwerke am Netz: Günstiger Grundlaststrom stabilisiert das Netz, führt aber zu Protesten.");
+  else feedback.push("Atomausstieg bleibt bestehen: Fokus auf Erneuerbare und Gas-Backup.");
 
   return {
     year: currentEconomy.year + 1,
@@ -179,8 +198,9 @@ export function simulateYear(
     revenue: totalRevenue,
     expenses: totalExpenses,
     interestRate: newInterestRate,
-    feedback: feedback.length > 0 ? feedback : ["Ein ruhiges Jahr ohne größere Vorkommnisse."],
+    feedback: feedback.length > 0 ? feedback : ["Der Markt regelt. Ein stabiles Jahr."],
     competitiveness: newCompetitiveness,
     energyCosts: newEnergyCosts,
+    govSpendingRatio: govSpendingRatio,
   };
 }

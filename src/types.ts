@@ -14,6 +14,7 @@ export interface EconomicState {
   feedback: string[]; // Feedback for the year
   competitiveness: number; // 0-100 (Draghi Index)
   energyCosts: number; // Index (100 = base)
+  govSpendingRatio: number; // Staatsquote in %
 }
 
 export interface PolicyState {
@@ -35,27 +36,33 @@ export interface PolicyState {
   adminEfficiency: number; // Verwaltungseffizienz (0-100, 100 = hoch)
   co2Price: number; // CO2-Preis (€ pro Tonne)
   energyTaxRate: number; // Energiesteuersatz (Index, 100 = Standard)
+  nordStreamActive: boolean; // Nord Stream Pipeline Status
+  privatizationLevel: number; // Privatisierungsgrad (0-100)
+  nuclearPowerActive: boolean; // Atomenergie Status
 }
 
 export const INITIAL_POLICY: PolicyState = {
-  vatRate: 19,
-  corporateTaxRate: 15,
-  incomeTaxRate: 30,
+  vatRate: 16,
+  corporateTaxRate: 12,
+  incomeTaxRate: 25,
   ehegattensplitting: true,
-  migrationSpending: 30,
-  foreignAid: 25,
-  infrastructureSpending: 50,
-  educationSpending: 40,
-  defenseSpending: 52,
-  retirementAge: 67,
-  digitalizationInvestment: 10,
+  migrationSpending: 20,
+  foreignAid: 10,
+  infrastructureSpending: 40,
+  educationSpending: 35,
+  defenseSpending: 60, // Minarchism keeps defense strong
+  retirementAge: 68,
+  digitalizationInvestment: 5,
   debtBrakeActive: true,
-  energyTransitionSpending: 20,
-  keyTechInvestment: 15,
-  energySubsidies: 5,
-  adminEfficiency: 50,
-  co2Price: 45,
-  energyTaxRate: 100,
+  energyTransitionSpending: 10,
+  keyTechInvestment: 10,
+  energySubsidies: 0, // No subsidies in free market
+  adminEfficiency: 60,
+  co2Price: 25,
+  energyTaxRate: 80,
+  nordStreamActive: false,
+  privatizationLevel: 40,
+  nuclearPowerActive: false,
 };
 
 export const INITIAL_ECONOMY: EconomicState = {
@@ -74,4 +81,5 @@ export const INITIAL_ECONOMY: EconomicState = {
   feedback: ["Willkommen im Amt! Deutschland steht vor großen Herausforderungen. Finden Sie die richtige Balance."],
   competitiveness: 45, // Starting low based on Draghi report
   energyCosts: 150, // High starting energy costs
+  govSpendingRatio: 48.5, // Current German Staatsquote is around 48-49%
 };
