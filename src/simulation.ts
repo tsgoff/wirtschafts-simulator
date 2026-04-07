@@ -97,25 +97,40 @@ export function simulateYear(
   const energyTaxInflationImpact = (policy.energyTaxRate - 80) * 0.02 + (policy.co2Price - 25) * 0.025;
   const newInflation = Math.max(-1.0, currentEconomy.inflation + growthInflationImpact + vatInflationImpact + energyTaxInflationImpact);
   
+  // Competitiveness logic
+  const newCompetitiveness = Math.min(100, Math.max(0, 
+    currentEconomy.competitiveness + 
+    (policy.keyTechInvestment - 10) * 0.15 + 
+    (policy.digitalizationInvestment - 5) * 0.1 +
+    (policy.adminEfficiency - 60) * 0.25 + 
+    (policy.privatizationLevel - 40) * 0.3 -
+    (policy.corporateTaxRate - 12) * 0.4 -
+    (policy.co2Price - 25) * 0.08
+  ));
+
   // Popularity impact
   let popularityChange = 0;
-  if (totalGrowth > 2.0) popularityChange += 5;
-  if (totalGrowth < 0) popularityChange -= 15;
-  if (newUnemployment > 7.0) popularityChange -= 8;
-  if (newInflation > 4.0) popularityChange -= 12;
+  if (totalGrowth > 1.5) popularityChange += 5; // Easier to get growth bonus
+  if (totalGrowth > 3.0) popularityChange += 5; // Extra bonus for boom
+  if (totalGrowth < 0) popularityChange -= 12;
+  if (newUnemployment > 7.5) popularityChange -= 8;
+  if (newInflation > 4.5) popularityChange -= 10;
+  if (newInflation >= 1.0 && newInflation <= 3.0) popularityChange += 2; // Price stability bonus
   
   // Minarchist popularity: People like low taxes but hate radical cuts
-  if (totalRevenue / newGdp < 0.35) popularityChange += 3; // Tax relief bonus
-  if (totalExpenses / newGdp > 0.45) popularityChange -= 4; // Taxpayer burden penalty
+  if (totalRevenue / newGdp < 0.38) popularityChange += 4; // Tax relief bonus (easier to reach)
+  if (totalExpenses / newGdp > 0.52) popularityChange -= 4; // Taxpayer burden penalty (starts later)
+  
+  if (newCompetitiveness > 65) popularityChange += 3; // Pride in strong economy
   
   if (!policy.ehegattensplitting) popularityChange -= 4;
-  if (policy.retirementAge > 68) popularityChange -= (policy.retirementAge - 68) * 10;
-  if (policy.migrationSpending > 50) popularityChange -= 5;
-  if (policy.debtBrakeActive && budgetBalance < 0) popularityChange -= 3; 
-  if (policy.co2Price > 80) popularityChange -= 6; 
-  if (policy.nordStreamActive) popularityChange -= 15; 
-  if (policy.nuclearPowerActive) popularityChange -= 10; // Protest from green voters
-  if (policy.privatizationLevel > 70) popularityChange -= 5; // Fear of selling out state assets
+  if (policy.retirementAge > 68) popularityChange -= (policy.retirementAge - 68) * 8;
+  if (policy.migrationSpending > 60) popularityChange -= 4;
+  if (policy.debtBrakeActive && budgetBalance < -20) popularityChange -= 1.5; // Reduced austerity pain
+  if (policy.co2Price > 100) popularityChange -= 5; 
+  if (policy.nordStreamActive) popularityChange -= 12; 
+  if (policy.nuclearPowerActive) popularityChange -= 8; 
+  if (policy.privatizationLevel > 75) popularityChange -= 5; 
   
   const newPopularity = Math.min(100, Math.max(0, currentEconomy.popularity + popularityChange));
 
@@ -152,17 +167,6 @@ export function simulateYear(
   if (draghiGap > 40) {
     feedback.push(`Investitionslücke: Der Markt wartet auf bessere Rahmenbedingungen.`);
   }
-
-  // Competitiveness logic
-  const newCompetitiveness = Math.min(100, Math.max(0, 
-    currentEconomy.competitiveness + 
-    (policy.keyTechInvestment - 10) * 0.15 + 
-    (policy.digitalizationInvestment - 5) * 0.1 +
-    (policy.adminEfficiency - 60) * 0.25 + 
-    (policy.privatizationLevel - 40) * 0.3 -
-    (policy.corporateTaxRate - 12) * 0.4 -
-    (policy.co2Price - 25) * 0.08
-  ));
 
   // Energy cost logic
   const newEnergyCosts = Math.max(70, 
