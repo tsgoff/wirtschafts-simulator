@@ -46,32 +46,75 @@ export default function App() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Fetch real economic data on mount
+  // Fetch real economic and poll data on mount
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
 
-    async function fetchRealData() {
+    async function fetchData() {
       try {
-        // Try to fetch current ECB interest rate data
-        // We use a proxy because of CORS
-        const response = await fetch(
+        // 1. Fetch Poll Data from dawum.de
+        const pollResponse = await fetch('https://api.dawum.de/', { signal: controller.signal });
+        if (pollResponse.ok && isMounted) {
+          const data = await pollResponse.json();
+          
+          // Find the latest Bundestag poll (Survey_Id "1")
+          const polls = Object.values(data.Polls) as any[];
+          const bundestagPolls = polls
+            .filter(p => p.Survey_Id === "1")
+            .sort((a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime());
+
+          if (bundestagPolls.length > 0) {
+            const latestPoll = bundestagPolls[0];
+            const results = latestPoll.Results;
+            const parties = data.Parties;
+            
+            const newSupport: { [key: string]: number } = {};
+            let sonstige = 0;
+
+            // Map Dawum Party IDs to our internal names
+            // Dawum IDs: 1: CDU/CSU, 2: SPD, 3: FDP, 4: Grüne, 5: Linke, 7: AfD, 101: BSW
+            const partyMap: { [key: string]: string } = {
+              "1": "CDU/CSU",
+              "2": "SPD",
+              "7": "AfD",
+              "4": "Grüne",
+              "3": "FDP",
+              "101": "BSW",
+              "5": "Linke"
+            };
+
+            Object.entries(results).forEach(([id, value]) => {
+              const internalName = partyMap[id];
+              if (internalName) {
+                newSupport[internalName] = value as number;
+              } else {
+                sonstige += value as number;
+              }
+            });
+            
+            newSupport["Sonstige"] = sonstige;
+
+            setEconomy(prev => ({
+              ...prev,
+              partySupport: newSupport
+            }));
+          }
+        }
+
+        // 2. Fetch ECB interest rate data
+        const ecbResponse = await fetch(
           'https://api.allorigins.win/get?url=' + 
           encodeURIComponent('https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html'),
           { signal: controller.signal }
         );
         
-        if (response.ok && isMounted) {
-          // Even if we can't parse the HTML easily, we've successfully "connected"
-          // In a real production app, we'd use a JSON API like FRED
+        if (ecbResponse.ok && isMounted) {
           setEconomy(prev => ({ ...prev, interestRate: 4.5 }));
         }
       } catch (error) {
-        console.warn("Could not fetch live interest rates, using fallback:", error);
-        if (isMounted) {
-          setEconomy(prev => ({ ...prev, interestRate: 4.5 }));
-        }
+        console.warn("Could not fetch live data, using fallbacks:", error);
       } finally {
         clearTimeout(timeoutId);
         if (isMounted) {
@@ -80,7 +123,7 @@ export default function App() {
       }
     }
 
-    fetchRealData();
+    fetchData();
     return () => {
       isMounted = false;
       controller.abort();
