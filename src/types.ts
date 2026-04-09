@@ -16,6 +16,8 @@ export interface EconomicState {
   energyCosts: number; // Index (100 = base)
   govSpendingRatio: number; // Staatsquote in %
   partySupport: { [key: string]: number }; // Parteienunterstützung in %
+  population: number; // in Millionen
+  housingShortage: number; // in Tausend Wohneinheiten
 }
 
 export interface PolicyState {
@@ -40,6 +42,8 @@ export interface PolicyState {
   nordStreamActive: boolean; // Nord Stream Pipeline Status
   privatizationLevel: number; // Privatisierungsgrad (0-100)
   nuclearPowerActive: boolean; // Atomenergie Status
+  housingSubsidies: number; // Wohnbauförderung (in Mrd. €)
+  buildingDeregulation: number; // Entbürokratisierung Bauwesen (0-100)
 }
 
 export const INITIAL_POLICY: PolicyState = {
@@ -64,6 +68,8 @@ export const INITIAL_POLICY: PolicyState = {
   nordStreamActive: false,
   privatizationLevel: 40,
   nuclearPowerActive: false,
+  housingSubsidies: 5,
+  buildingDeregulation: 30,
 };
 
 export const INITIAL_ECONOMY: EconomicState = {
@@ -83,6 +89,8 @@ export const INITIAL_ECONOMY: EconomicState = {
   competitiveness: 45, // Starting low based on Draghi report
   energyCosts: 150, // High starting energy costs
   govSpendingRatio: 48.5, // Current German Staatsquote is around 48-49%
+  population: 84.5, // Aktuelle Bevölkerung ca. 84,5 Mio.
+  housingShortage: 700, // Geschätzter Mangel an Wohnungen (in Tausend)
   partySupport: {
     "CDU/CSU": 31,
     "SPD": 16,

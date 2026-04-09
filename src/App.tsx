@@ -16,7 +16,8 @@ import {
   Zap,
   ShieldCheck,
   Calendar,
-  Activity
+  Activity,
+  Home
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -199,6 +200,19 @@ export default function App() {
                 value={`${economy.inflation.toFixed(1)}%`} 
                 icon={<Percent className="w-5 h-5 text-amber-500" />}
                 trend={economy.inflation < 3 ? 'up' : 'down'}
+                invertTrend
+              />
+              <StatCard 
+                label="Bevölkerung" 
+                value={`${economy.population.toFixed(1)} Mio.`} 
+                icon={<Users className="w-5 h-5 text-cyan-500" />}
+                trend={economy.population > 80 ? 'up' : 'down'}
+              />
+              <StatCard 
+                label="Wohnungsmangel" 
+                value={`${economy.housingShortage.toFixed(0)}k`} 
+                icon={<Home className="w-5 h-5 text-orange-500" />}
+                trend={economy.housingShortage < 500 ? 'up' : 'down'}
                 invertTrend
               />
               <StatCard 
@@ -396,6 +410,20 @@ export default function App() {
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Struktur & Soziales</h3>
                   <div className="space-y-6">
                     <PolicySlider 
+                      label="Wohnbauförderung" 
+                      value={policy.housingSubsidies} 
+                      min={0} max={50} unit=" Mrd." 
+                      onChange={(v) => updatePolicy('housingSubsidies', v)}
+                      icon={<Home className="w-4 h-4 text-orange-500" />}
+                    />
+                    <PolicySlider 
+                      label="Bau-Entbürokratisierung" 
+                      value={policy.buildingDeregulation} 
+                      min={0} max={100} unit="%" 
+                      onChange={(v) => updatePolicy('buildingDeregulation', v)}
+                      icon={<Construction className="w-4 h-4 text-slate-500" />}
+                    />
+                    <PolicySlider 
                       label="Verwaltungseffizienz" 
                       value={policy.adminEfficiency} 
                       min={10} max={100} unit="%" 
@@ -566,6 +594,7 @@ export default function App() {
                     {policy.keyTechInvestment < 10 && <li>Mangelnde Investitionen in Schlüsseltechnologien haben Deutschland den Anschluss an den Weltmarkt gekostet.</li>}
                     {policy.energyTransitionSpending < 15 && <li>Die Abhängigkeit von fossilen Brennstoffen ohne eigene Vorkommen wurde zum Verhängnis.</li>}
                     {economy.popularity <= 0 && economy.popularity < 10 && <li>Ihre Reformen waren insgesamt zu unpopulär oder schlecht kommuniziert.</li>}
+                    {economy.housingShortage > 1200 && <li>Die extreme Wohnungsnot hat zu einer sozialen Krise geführt, die nicht mehr beherrschbar war.</li>}
                   </ul>
                 </div>
               </div>

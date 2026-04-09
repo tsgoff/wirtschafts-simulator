@@ -71,6 +71,7 @@ export function simulateYear(
     policy.energyTransitionSpending +
     policy.keyTechInvestment +
     policy.energySubsidies +
+    policy.housingSubsidies +
     adminCosts;
     
   // Debt interest payments
@@ -108,6 +109,33 @@ export function simulateYear(
     (policy.co2Price - 25) * 0.08
   ));
 
+  // Simulate interest rate changes (ECB behavior)
+  let newInterestRate = currentEconomy.interestRate;
+  if (newInflation > 3.0) newInterestRate += 0.25;
+  else if (newInflation < 1.5 && totalGrowth < 0.5) newInterestRate -= 0.25;
+  newInterestRate = Math.max(0, Math.min(10, newInterestRate));
+
+  // Population simulation
+  const naturalGrowth = -0.05; // -0.05% natural decline
+  const migrationImpact = (policy.migrationSpending / 20) * 0.4; // Base migration
+  const economicPull = totalGrowth * 0.1;
+  const populationGrowth = naturalGrowth + migrationImpact + economicPull;
+  const newPopulation = currentEconomy.population * (1 + populationGrowth / 100);
+
+  // Housing simulation
+  // Demand increases with population
+  const housingDemandIncrease = (newPopulation - currentEconomy.population) * 1000; // 1M people = 1M units demand? No, let's say 1M people = 500k units
+  const unitsPerMillion = 450; 
+  const newDemand = (newPopulation - currentEconomy.population) * unitsPerMillion; 
+  
+  // Supply increases with subsidies and deregulation, decreases with high interest rates
+  const subsidySupply = policy.housingSubsidies * 15; // 1B = 15k units
+  const deregulationSupply = (policy.buildingDeregulation - 30) * 2; // 1 point = 2k units
+  const interestRateSupplyImpact = (newInterestRate - 3.0) * -20; // High rates kill building
+  
+  const newHousingSupply = Math.max(50, 250 + subsidySupply + deregulationSupply + interestRateSupplyImpact);
+  const newHousingShortage = Math.max(0, currentEconomy.housingShortage + newDemand - newHousingSupply);
+
   // Popularity impact
   let popularityChange = 0;
   if (totalGrowth > 1.5) popularityChange += 5; // Easier to get growth bonus
@@ -132,13 +160,10 @@ export function simulateYear(
   if (policy.nuclearPowerActive) popularityChange -= 8; 
   if (policy.privatizationLevel > 75) popularityChange -= 5; 
   
+  if (newHousingShortage > 800) popularityChange -= 5; // Housing crisis penalty
+  if (newHousingShortage < 400) popularityChange += 3; // Housing relief bonus
+  
   const newPopularity = Math.min(100, Math.max(0, currentEconomy.popularity + popularityChange));
-
-  // Simulate interest rate changes (ECB behavior)
-  let newInterestRate = currentEconomy.interestRate;
-  if (newInflation > 3.0) newInterestRate += 0.25;
-  else if (newInflation < 1.5 && totalGrowth < 0.5) newInterestRate -= 0.25;
-  newInterestRate = Math.max(0, Math.min(10, newInterestRate));
 
   const feedback: string[] = [];
 
@@ -162,6 +187,12 @@ export function simulateYear(
   if (policy.incomeTaxRate < 20) feedback.push("Niedrige Einkommensteuern belohnen Leistung und Eigenverantwortung.");
   if (policy.adminEfficiency > 80) feedback.push("Effiziente Verwaltung: Bürokratie ist kaum noch ein Hindernis.");
   
+  // Housing feedback
+  if (newHousingShortage > 1000) feedback.push("Wohnungsnot! Die Mieten explodieren, das Volk ist zornig.");
+  else if (newHousingShortage < 300) feedback.push("Entspannung am Wohnungsmarkt: Bauen wird wieder attraktiv.");
+  
+  if (policy.buildingDeregulation > 70) feedback.push("Bauboom durch Entbürokratisierung: Weniger Regeln, mehr Wohnraum.");
+
   // Energy & Tech feedback
   const draghiGap = 120 - (policy.keyTechInvestment + policy.energyTransitionSpending + policy.digitalizationInvestment);
   if (draghiGap > 40) {
@@ -273,10 +304,21 @@ export function simulateYear(
     adjust("Linke", -0.8, "Linke warnt vor Ausverkauf staatlicher Daseinsvorsorge."); 
   }
   
-  if (policy.retirementAge > 68) { 
-    adjust("FDP", 0.3, "Längere Lebensarbeitszeit zur Rentensicherung wird von FDP unterstützt."); 
-    adjust("SPD", -0.8, "Rente mit 69+ ist ein rotes Tuch für die SPD-Wählerschaft."); 
-    adjust("BSW", -0.5, "BSW kritisiert Rentenkürzungen durch die Hintertür."); 
+  if (policy.retirementAge > 68) { adjust("FDP", 0.3, "Längere Lebensarbeitszeit zur Rentensicherung wird von FDP unterstützt."); adjust("SPD", -0.8, "Rente mit 69+ ist ein rotes Tuch für die SPD-Wählerschaft."); adjust("BSW", -0.5, "BSW kritisiert Rentenkürzungen durch die Hintertür."); adjust("Linke", -0.5, "Pazifistische Basis der Linken protestiert gegen Rüstungsausgaben."); }
+
+  // Housing impacts
+  if (newHousingShortage > 900) {
+    adjust("SPD", -0.5, "Wohnungsnot belastet die Kernklientel der SPD.");
+    adjust("CDU/CSU", -0.3, "Mangelnder Wohnraum wird als Regierungsversagen gewertet.");
+    adjust("Linke", 0.5, "Linke profitiert von der Debatte um Mietenstopp und Enteignung.");
+  }
+  if (policy.buildingDeregulation > 70) {
+    adjust("FDP", 0.6, "Bauen durch weniger Regeln ist ein Kernanliegen der FDP.");
+    adjust("CDU/CSU", 0.3, "Entbürokratisierung im Bauwesen kommt bei der Union gut an.");
+  }
+  if (policy.housingSubsidies > 20) {
+    adjust("SPD", 0.4, "Staatliche Wohnbauförderung entspricht SPD-Positionen.");
+    adjust("Linke", 0.3, "Mehr Geld für Wohnraum wird von der Linken begrüßt.");
   }
 
   // Normalize to 100%
@@ -309,5 +351,7 @@ export function simulateYear(
     energyCosts: newEnergyCosts,
     govSpendingRatio: govSpendingRatio,
     partySupport: finalPartySupport,
+    population: newPopulation,
+    housingShortage: newHousingShortage,
   };
 }
