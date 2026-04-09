@@ -248,8 +248,8 @@ export function simulateYear(
   }
 
   if (newInflation > 4.0) {
-    adjust("AfD", 0.8, "Hohe Inflation schürt Ängste und stärkt die Opposition.");
-    adjust("BSW", 0.5, "Kaufkraftverlust treibt Wähler zu Protestparteien.");
+    adjust("AfD", 1.0, "Hohe Inflation schürt Ängste und stärkt die Opposition.");
+    adjust("BSW", 0.7, "Kaufkraftverlust treibt unzufriedene Wähler zum BSW.");
     adjust("CDU/CSU", -0.5, "Geldentwertung wird der aktuellen Politik angelastet.");
     adjust("SPD", -0.5, "Reallohnverluste schwächen die SPD.");
   }
@@ -279,7 +279,7 @@ export function simulateYear(
   }
   if (policy.co2Price > 100) { 
     adjust("Grüne", 1.0, "Hoher CO2-Preis wird als konsequenter Klimaschutz gewertet."); 
-    adjust("AfD", -1.0, "AfD-Wähler lehnen 'Klimadiktatur' und hohe Energiepreise ab."); 
+    adjust("AfD", 1.2, "Hohe CO2-Preise treiben unzufriedene Bürger als Protestwähler zur AfD."); 
   }
   
   // Spending
@@ -304,7 +304,12 @@ export function simulateYear(
     adjust("Linke", -0.8, "Linke warnt vor Ausverkauf staatlicher Daseinsvorsorge."); 
   }
   
-  if (policy.retirementAge > 68) { adjust("FDP", 0.3, "Längere Lebensarbeitszeit zur Rentensicherung wird von FDP unterstützt."); adjust("SPD", -0.8, "Rente mit 69+ ist ein rotes Tuch für die SPD-Wählerschaft."); adjust("BSW", -0.5, "BSW kritisiert Rentenkürzungen durch die Hintertür."); adjust("Linke", -0.5, "Pazifistische Basis der Linken protestiert gegen Rüstungsausgaben."); }
+  if (policy.retirementAge > 68) { 
+    adjust("FDP", 0.3, "Längere Lebensarbeitszeit zur Rentensicherung wird von FDP unterstützt."); 
+    adjust("SPD", -0.8, "Rente mit 69+ ist ein rotes Tuch für die SPD-Wählerschaft."); 
+    adjust("BSW", 0.6, "BSW profitiert vom Protest gegen Rentenkürzungen."); 
+    adjust("Linke", 0.4, "Die Linke mobilisiert gegen die Erhöhung des Rentenalters."); 
+  }
 
   // Housing impacts
   if (newHousingShortage > 900) {
