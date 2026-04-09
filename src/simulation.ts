@@ -189,6 +189,63 @@ export function simulateYear(
   if (policy.nuclearPowerActive) feedback.push("Kernkraftwerke am Netz: Günstiger Grundlaststrom stabilisiert das Netz, führt aber zu Protesten.");
   else feedback.push("Atomausstieg bleibt bestehen: Fokus auf Erneuerbare und Gas-Backup.");
 
+  // Party support calculation
+  const newPartySupport = { ...currentEconomy.partySupport };
+  
+  // Helper to adjust support
+  const adjust = (party: string, amount: number) => {
+    if (newPartySupport[party] !== undefined) {
+      newPartySupport[party] += amount;
+    }
+  };
+
+  // Economic performance impacts
+  if (totalGrowth > 2.0) {
+    adjust("CDU/CSU", 0.5);
+    adjust("FDP", 0.3);
+    adjust("SPD", 0.2);
+  } else if (totalGrowth < 0) {
+    adjust("CDU/CSU", -1.0);
+    adjust("SPD", -0.8);
+    adjust("AfD", 1.0);
+    adjust("BSW", 0.5);
+  }
+
+  if (newInflation > 4.0) {
+    adjust("AfD", 0.8);
+    adjust("BSW", 0.5);
+    adjust("CDU/CSU", -0.5);
+    adjust("SPD", -0.5);
+  }
+
+  // Policy impacts
+  // Taxes
+  if (policy.corporateTaxRate < 15) { adjust("FDP", 0.5); adjust("CDU/CSU", 0.3); adjust("Linke", -0.3); }
+  if (policy.incomeTaxRate < 30) { adjust("FDP", 0.4); adjust("CDU/CSU", 0.2); adjust("SPD", 0.1); }
+  
+  // Energy
+  if (policy.nuclearPowerActive) { adjust("CDU/CSU", 0.5); adjust("AfD", 0.5); adjust("FDP", 0.3); adjust("Grüne", -1.5); }
+  if (policy.nordStreamActive) { adjust("AfD", 1.0); adjust("BSW", 0.8); adjust("Grüne", -1.0); adjust("CDU/CSU", -0.5); }
+  if (policy.co2Price > 100) { adjust("Grüne", 1.0); adjust("AfD", -1.0); adjust("BSW", -0.5); }
+  
+  // Spending
+  if (policy.migrationSpending < 15) { adjust("AfD", -0.5); adjust("CDU/CSU", 0.5); adjust("Grüne", -0.5); adjust("Linke", -0.5); }
+  if (policy.migrationSpending > 40) { adjust("AfD", 1.5); adjust("Grüne", 0.5); adjust("CDU/CSU", -0.5); }
+  
+  if (policy.defenseSpending > 70) { adjust("CDU/CSU", 0.5); adjust("SPD", 0.2); adjust("BSW", -0.5); adjust("Linke", -0.5); adjust("Grüne", 0.3); }
+  
+  if (policy.privatizationLevel > 60) { adjust("FDP", 0.8); adjust("CDU/CSU", 0.4); adjust("SPD", -0.5); adjust("Linke", -0.8); }
+  
+  if (policy.retirementAge > 68) { adjust("FDP", 0.3); adjust("CDU/CSU", 0.2); adjust("SPD", -0.8); adjust("BSW", -0.5); adjust("Linke", -0.5); }
+
+  // Normalize to 100%
+  let totalSupport = 0;
+  Object.values(newPartySupport).forEach(v => totalSupport += Math.max(0.1, v));
+  
+  for (const party in newPartySupport) {
+    newPartySupport[party] = (Math.max(0.1, newPartySupport[party]) / totalSupport) * 100;
+  }
+
   return {
     year: currentEconomy.year + 1,
     gdp: newGdp,
@@ -206,5 +263,6 @@ export function simulateYear(
     competitiveness: newCompetitiveness,
     energyCosts: newEnergyCosts,
     govSpendingRatio: govSpendingRatio,
+    partySupport: newPartySupport,
   };
 }

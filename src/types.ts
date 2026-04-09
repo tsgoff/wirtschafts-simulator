@@ -15,6 +15,7 @@ export interface EconomicState {
   competitiveness: number; // 0-100 (Draghi Index)
   energyCosts: number; // Index (100 = base)
   govSpendingRatio: number; // Staatsquote in %
+  partySupport: { [key: string]: number }; // Parteienunterstützung in %
 }
 
 export interface PolicyState {
@@ -82,4 +83,14 @@ export const INITIAL_ECONOMY: EconomicState = {
   competitiveness: 45, // Starting low based on Draghi report
   energyCosts: 150, // High starting energy costs
   govSpendingRatio: 48.5, // Current German Staatsquote is around 48-49%
+  partySupport: {
+    "CDU/CSU": 31,
+    "SPD": 16,
+    "AfD": 18,
+    "Grüne": 11,
+    "FDP": 5,
+    "BSW": 8,
+    "Linke": 3,
+    "Sonstige": 8
+  }
 };
