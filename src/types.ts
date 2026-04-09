@@ -92,13 +92,13 @@ export const INITIAL_ECONOMY: EconomicState = {
   population: 84.5, // Aktuelle Bevölkerung ca. 84,5 Mio.
   housingShortage: 700, // Geschätzter Mangel an Wohnungen (in Tausend)
   partySupport: {
-    "CDU/CSU": 31,
-    "SPD": 16,
-    "AfD": 18,
-    "Grüne": 11,
-    "FDP": 5,
-    "BSW": 8,
-    "Linke": 3,
-    "Sonstige": 8
+    "CDU/CSU": 25,
+    "SPD": 13,
+    "AfD": 26,
+    "Grüne": 12,
+    "FDP": 3.5,
+    "BSW": 4,
+    "Linke": 10.5,
+    "Sonstige": 6
   }
 };

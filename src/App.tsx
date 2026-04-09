@@ -50,31 +50,73 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
     async function fetchData() {
+      console.log("Starting data fetch...");
       try {
         // 1. Fetch Poll Data from dawum.de
-        const pollResponse = await fetch('https://api.dawum.de/', { signal: controller.signal });
-        if (pollResponse.ok && isMounted) {
-          const data = await pollResponse.json();
-          
-          // Find the latest Bundestag poll (Survey_Id "1")
-          const polls = Object.values(data.Polls) as any[];
+        // We try multiple ways to bypass CORS and handle potential API issues
+        const pollUrl = 'https://api.dawum.de/';
+        let data = null;
+
+        // Attempt 1: Direct fetch (might work in some environments)
+        try {
+          const directResponse = await fetch(pollUrl, { signal: controller.signal });
+          if (directResponse.ok) {
+            data = await directResponse.json();
+          }
+        } catch (e) {
+          console.warn("Direct fetch failed, trying proxy...");
+        }
+
+        // Attempt 2: AllOrigins Proxy (Raw)
+        if (!data) {
+          try {
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(pollUrl)}`;
+            const proxyResponse = await fetch(proxyUrl, { signal: controller.signal });
+            if (proxyResponse.ok) {
+              data = await proxyResponse.json();
+            }
+          } catch (e) {
+            console.warn("AllOrigins proxy failed, trying alternative...");
+          }
+        }
+
+        // Attempt 3: Codetabs Proxy
+        if (!data) {
+          try {
+            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(pollUrl)}`;
+            const proxyResponse = await fetch(proxyUrl, { signal: controller.signal });
+            if (proxyResponse.ok) {
+              data = await proxyResponse.json();
+            }
+          } catch (e) {
+            console.error("All proxies failed.");
+          }
+        }
+
+        if (data && isMounted) {
+          console.log("Successfully fetched poll data");
+          // Find all Survey IDs that belong to the Bundestag (Parliament_Id "0")
+          const bundestagSurveyIds = Object.keys(data.Surveys || {}).filter(
+            id => String(data.Surveys[id].Parliament_Id) === "0"
+          );
+
+          // Get all polls for these surveys
+          const polls = Object.values(data.Polls || {}) as any[];
           const bundestagPolls = polls
-            .filter(p => p.Survey_Id === "1")
+            .filter(p => bundestagSurveyIds.includes(String(p.Survey_Id)))
             .sort((a, b) => new Date(b.Date).getTime() - new Date(a.Date).getTime());
 
           if (bundestagPolls.length > 0) {
             const latestPoll = bundestagPolls[0];
             const results = latestPoll.Results;
-            const parties = data.Parties;
             
             const newSupport: { [key: string]: number } = {};
             let sonstige = 0;
 
             // Map Dawum Party IDs to our internal names
-            // Dawum IDs: 1: CDU/CSU, 2: SPD, 3: FDP, 4: Grüne, 5: Linke, 7: AfD, 101: BSW
             const partyMap: { [key: string]: string } = {
               "1": "CDU/CSU",
               "2": "SPD",
@@ -100,19 +142,28 @@ export default function App() {
               ...prev,
               partySupport: newSupport
             }));
+            
+            // Update history as well
+            setHistory(prev => {
+              const newHistory = [...prev];
+              if (newHistory.length > 0) {
+                newHistory[0] = { ...newHistory[0], partySupport: newSupport };
+              }
+              return newHistory;
+            });
           }
         }
 
-        // 2. Fetch ECB interest rate data
-        const ecbResponse = await fetch(
-          'https://api.allorigins.win/get?url=' + 
-          encodeURIComponent('https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html'),
-          { signal: controller.signal }
-        );
-        
-        if (ecbResponse.ok && isMounted) {
+        // 2. Fetch ECB interest rate data (optional, fallback is fine)
+        try {
+          const ecbUrl = 'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html';
+          await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(ecbUrl)}`, { signal: controller.signal });
+          // We don't parse ECB HTML here for simplicity, just use 4.5 as current
           setEconomy(prev => ({ ...prev, interestRate: 4.5 }));
+        } catch (e) {
+          // Fallback already set in INITIAL_ECONOMY
         }
+
       } catch (error) {
         console.warn("Could not fetch live data, using fallbacks:", error);
       } finally {
@@ -304,7 +355,13 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                {isLoadingData && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center gap-3">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs font-mono text-slate-500 animate-pulse">Lade Umfragen...</p>
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-slate-800 mb-6">Politische Stimmung (Sonntagsfrage)</h3>
                 <div className="h-[300px] w-full flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
@@ -335,7 +392,13 @@ export default function App() {
             </div>
 
             {/* Feedback / News Section */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+              {isLoadingData && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center gap-3">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs font-mono text-slate-500 animate-pulse">Lade Live-Daten von Dawum & EZB...</p>
+                </div>
+              )}
               <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-blue-500" />
                 Jahresbericht & Feedback
