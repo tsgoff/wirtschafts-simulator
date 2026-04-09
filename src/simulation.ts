@@ -191,60 +191,105 @@ export function simulateYear(
 
   // Party support calculation
   const newPartySupport = { ...currentEconomy.partySupport };
+  const partyFeedback: string[] = [];
   
-  // Helper to adjust support
-  const adjust = (party: string, amount: number) => {
+  // Helper to adjust support and track reasons
+  const adjust = (party: string, amount: number, reason?: string) => {
     if (newPartySupport[party] !== undefined) {
       newPartySupport[party] += amount;
+      if (reason && Math.abs(amount) >= 0.3) {
+        const trend = amount > 0 ? "Gewinn" : "Verlust";
+        partyFeedback.push(`${party} (${trend}): ${reason}`);
+      }
     }
   };
 
   // Economic performance impacts
   if (totalGrowth > 2.0) {
-    adjust("CDU/CSU", 0.5);
-    adjust("FDP", 0.3);
-    adjust("SPD", 0.2);
+    adjust("CDU/CSU", 0.5, "Wirtschaftswachstum stärkt das Vertrauen in bürgerliche Kompetenz.");
+    adjust("FDP", 0.3, "Unternehmen investieren, was die FDP-Wählerbasis mobilisiert.");
+    adjust("SPD", 0.2, "Gute Konjunktur sichert Arbeitsplätze, wovon die SPD profitiert.");
   } else if (totalGrowth < 0) {
-    adjust("CDU/CSU", -1.0);
-    adjust("SPD", -0.8);
-    adjust("AfD", 1.0);
-    adjust("BSW", 0.5);
+    adjust("CDU/CSU", -1.0, "Rezession schadet dem Image der Union als Wirtschaftspartei.");
+    adjust("SPD", -0.8, "Wirtschaftskrise verunsichert die Arbeitnehmerschaft.");
+    adjust("AfD", 1.0, "Unzufriedenheit mit der wirtschaftlichen Lage treibt Wähler zur AfD.");
+    adjust("BSW", 0.5, "Wirtschaftliche Instabilität stärkt die populistische Linke.");
   }
 
   if (newInflation > 4.0) {
-    adjust("AfD", 0.8);
-    adjust("BSW", 0.5);
-    adjust("CDU/CSU", -0.5);
-    adjust("SPD", -0.5);
+    adjust("AfD", 0.8, "Hohe Inflation schürt Ängste und stärkt die Opposition.");
+    adjust("BSW", 0.5, "Kaufkraftverlust treibt Wähler zu Protestparteien.");
+    adjust("CDU/CSU", -0.5, "Geldentwertung wird der aktuellen Politik angelastet.");
+    adjust("SPD", -0.5, "Reallohnverluste schwächen die SPD.");
   }
 
   // Policy impacts
   // Taxes
-  if (policy.corporateTaxRate < 15) { adjust("FDP", 0.5); adjust("CDU/CSU", 0.3); adjust("Linke", -0.3); }
-  if (policy.incomeTaxRate < 30) { adjust("FDP", 0.4); adjust("CDU/CSU", 0.2); adjust("SPD", 0.1); }
+  if (policy.corporateTaxRate < 15) { 
+    adjust("FDP", 0.5, "Niedrige Körperschaftsteuern sind Kernforderung des FDP-Programms."); 
+    adjust("CDU/CSU", 0.3, "Steuersenkungen für Unternehmen entsprechen Unions-Positionen."); 
+    adjust("Linke", -0.3, "Linke kritisiert Entlastung von Konzernen als unsozial."); 
+  }
+  if (policy.incomeTaxRate < 30) { 
+    adjust("FDP", 0.4, "Entlastung der Leistungsträger stärkt die FDP."); 
+    adjust("CDU/CSU", 0.2, "Steuersenkungen kommen bei der bürgerlichen Mitte gut an."); 
+  }
   
   // Energy
-  if (policy.nuclearPowerActive) { adjust("CDU/CSU", 0.5); adjust("AfD", 0.5); adjust("FDP", 0.3); adjust("Grüne", -1.5); }
-  if (policy.nordStreamActive) { adjust("AfD", 1.0); adjust("BSW", 0.8); adjust("Grüne", -1.0); adjust("CDU/CSU", -0.5); }
-  if (policy.co2Price > 100) { adjust("Grüne", 1.0); adjust("AfD", -1.0); adjust("BSW", -0.5); }
+  if (policy.nuclearPowerActive) { 
+    adjust("CDU/CSU", 0.5, "Rückkehr zur Kernkraft wird von der Unionsbasis begrüßt."); 
+    adjust("AfD", 0.5, "AfD profitiert von der Abkehr vom Atomausstieg."); 
+    adjust("Grüne", -1.5, "Kernkraft-Reaktivierung ist ein massiver Bruch mit grünen Grundwerten."); 
+  }
+  if (policy.nordStreamActive) { 
+    adjust("AfD", 1.0, "Forderung nach günstiger Energie via Nord Stream erfüllt."); 
+    adjust("BSW", 0.8, "Annäherung an Russland entspricht BSW-Positionen."); 
+    adjust("Grüne", -1.0, "Grüne Wähler lehnen fossile Abhängigkeit von Russland strikt ab."); 
+  }
+  if (policy.co2Price > 100) { 
+    adjust("Grüne", 1.0, "Hoher CO2-Preis wird als konsequenter Klimaschutz gewertet."); 
+    adjust("AfD", -1.0, "AfD-Wähler lehnen 'Klimadiktatur' und hohe Energiepreise ab."); 
+  }
   
   // Spending
-  if (policy.migrationSpending < 15) { adjust("AfD", -0.5); adjust("CDU/CSU", 0.5); adjust("Grüne", -0.5); adjust("Linke", -0.5); }
-  if (policy.migrationSpending > 40) { adjust("AfD", 1.5); adjust("Grüne", 0.5); adjust("CDU/CSU", -0.5); }
+  if (policy.migrationSpending < 15) { 
+    adjust("AfD", -0.5, "Härterer Kurs nimmt der AfD ein Alleinstellungsmerkmal."); 
+    adjust("CDU/CSU", 0.5, "Forderung nach Begrenzung der Migration wird umgesetzt."); 
+    adjust("Grüne", -0.5, "Kürzungen bei Migration stoßen auf grüne Kritik."); 
+  }
+  if (policy.migrationSpending > 40) { 
+    adjust("AfD", 1.5, "Hohe Migrationskosten sind zentrales Mobilisierungsthema der AfD."); 
+    adjust("Grüne", 0.5, "Humanitäre Ausrichtung wird von grünen Wählern honoriert."); 
+  }
   
-  if (policy.defenseSpending > 70) { adjust("CDU/CSU", 0.5); adjust("SPD", 0.2); adjust("BSW", -0.5); adjust("Linke", -0.5); adjust("Grüne", 0.3); }
+  if (policy.defenseSpending > 70) { 
+    adjust("CDU/CSU", 0.5, "Stärkung der Bundeswehr entspricht Unions-Programmatik."); 
+    adjust("BSW", -0.5, "BSW lehnt Aufrüstung und Militarisierung ab."); 
+    adjust("Linke", -0.5, "Pazifistische Basis der Linken protestiert gegen Rüstungsausgaben."); 
+  }
   
-  if (policy.privatizationLevel > 60) { adjust("FDP", 0.8); adjust("CDU/CSU", 0.4); adjust("SPD", -0.5); adjust("Linke", -0.8); }
+  if (policy.privatizationLevel > 60) { 
+    adjust("FDP", 0.8, "Privatisierung und 'Mehr Markt' sind FDP-Identitätsthemen."); 
+    adjust("Linke", -0.8, "Linke warnt vor Ausverkauf staatlicher Daseinsvorsorge."); 
+  }
   
-  if (policy.retirementAge > 68) { adjust("FDP", 0.3); adjust("CDU/CSU", 0.2); adjust("SPD", -0.8); adjust("BSW", -0.5); adjust("Linke", -0.5); }
+  if (policy.retirementAge > 68) { 
+    adjust("FDP", 0.3, "Längere Lebensarbeitszeit zur Rentensicherung wird von FDP unterstützt."); 
+    adjust("SPD", -0.8, "Rente mit 69+ ist ein rotes Tuch für die SPD-Wählerschaft."); 
+    adjust("BSW", -0.5, "BSW kritisiert Rentenkürzungen durch die Hintertür."); 
+  }
 
   // Normalize to 100%
   let totalSupport = 0;
   Object.values(newPartySupport).forEach(v => totalSupport += Math.max(0.1, v));
   
+  const finalPartySupport: { [key: string]: number } = {};
   for (const party in newPartySupport) {
-    newPartySupport[party] = (Math.max(0.1, newPartySupport[party]) / totalSupport) * 100;
+    finalPartySupport[party] = (Math.max(0.1, newPartySupport[party]) / totalSupport) * 100;
   }
+
+  // Add party feedback to general feedback
+  const combinedFeedback = [...feedback, ...partyFeedback];
 
   return {
     year: currentEconomy.year + 1,
@@ -259,10 +304,10 @@ export function simulateYear(
     revenue: totalRevenue,
     expenses: totalExpenses,
     interestRate: newInterestRate,
-    feedback: feedback.length > 0 ? feedback : ["Der Markt regelt. Ein stabiles Jahr."],
+    feedback: combinedFeedback.length > 0 ? combinedFeedback : ["Der Markt regelt. Ein stabiles Jahr."],
     competitiveness: newCompetitiveness,
     energyCosts: newEnergyCosts,
     govSpendingRatio: govSpendingRatio,
-    partySupport: newPartySupport,
+    partySupport: finalPartySupport,
   };
 }
