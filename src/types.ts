@@ -18,6 +18,7 @@ export interface EconomicState {
   partySupport: { [key: string]: number }; // Parteienunterstützung in %
   population: number; // in Millionen
   housingShortage: number; // in Tausend Wohneinheiten
+  goldPrice: number; // Goldpreis in EUR pro Feinunze
 }
 
 export interface PolicyState {
@@ -100,5 +101,6 @@ export const INITIAL_ECONOMY: EconomicState = {
     "BSW": 4,
     "Linke": 10.5,
     "Sonstige": 6
-  }
+  },
+  goldPrice: 2250, // Initialer Goldpreis in EUR
 };

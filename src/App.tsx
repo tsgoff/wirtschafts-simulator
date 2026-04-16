@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Calendar,
   Activity,
-  Home
+  Home,
+  Coins
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -162,6 +163,26 @@ export default function App() {
           setEconomy(prev => ({ ...prev, interestRate: 4.5 }));
         } catch (e) {
           // Fallback already set in INITIAL_ECONOMY
+        }
+
+        // 3. Fetch Gold Price
+        try {
+          const goldResponse = await fetch('https://min-api.cryptocompare.com/data/price?fsym=XAU&tsyms=EUR', { signal: controller.signal });
+          if (goldResponse.ok && isMounted) {
+            const goldData = await goldResponse.json();
+            if (goldData.EUR) {
+              setEconomy(prev => ({ ...prev, goldPrice: goldData.EUR }));
+              setHistory(prev => {
+                const newHistory = [...prev];
+                if (newHistory.length > 0) {
+                  newHistory[0] = { ...newHistory[0], goldPrice: goldData.EUR };
+                }
+                return newHistory;
+              });
+            }
+          }
+        } catch (e) {
+          console.warn("Gold price fetch failed, using fallback.");
         }
 
       } catch (error) {
@@ -315,6 +336,12 @@ export default function App() {
                 icon={<Heart className={cn("w-5 h-5", economy.popularity > 50 ? "text-rose-500" : "text-slate-400")} />}
                 trend={economy.popularity > 50 ? 'up' : 'down'}
               />
+              <StatCard 
+                label="Goldpreis (oz)" 
+                value={`${economy.goldPrice.toFixed(0)} €`} 
+                icon={<Coins className="w-5 h-5 text-yellow-500" />}
+                trend={economy.goldPrice > 2000 ? 'up' : 'down'}
+              />
             </div>
 
             {/* Main Chart Area */}
@@ -331,6 +358,10 @@ export default function App() {
                       <div className="w-3 h-3 rounded-full bg-rose-500" />
                       <span className="text-slate-600">Schulden</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <span className="text-slate-600">Gold</span>
+                    </div>
                   </div>
                 </div>
                 <div className="h-[300px] w-full">
@@ -341,6 +372,10 @@ export default function App() {
                           <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
                           <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                         </linearGradient>
+                        <linearGradient id="colorGold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#eab308" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                        </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="year" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
@@ -350,6 +385,7 @@ export default function App() {
                       />
                       <Area type="monotone" dataKey="gdp" stroke="#3b82f6" fillOpacity={1} fill="url(#colorGdp)" strokeWidth={3} />
                       <Area type="monotone" dataKey="debt" stroke="#f43f5e" fill="transparent" strokeWidth={2} strokeDasharray="5 5" />
+                      <Area type="monotone" dataKey="goldPrice" stroke="#eab308" fillOpacity={1} fill="url(#colorGold)" strokeWidth={2} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

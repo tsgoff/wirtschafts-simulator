@@ -358,5 +358,6 @@ export function simulateYear(
     partySupport: finalPartySupport,
     population: newPopulation,
     housingShortage: newHousingShortage,
+    goldPrice: Math.max(500, currentEconomy.goldPrice + (newInflation * 0.5) + (newInterestRate - 4.5) * -15 + (Math.random() - 0.5) * 40),
   };
 }
