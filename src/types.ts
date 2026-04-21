@@ -19,6 +19,7 @@ export interface EconomicState {
   population: number; // in Millionen
   housingShortage: number; // in Tausend Wohneinheiten
   goldPrice: number; // Goldpreis in EUR pro Feinunze
+  taxRevenue: number; // Summe aller Steuereinnahmen in Mrd. EUR
 }
 
 export interface PolicyState {
@@ -103,4 +104,5 @@ export const INITIAL_ECONOMY: EconomicState = {
     "Sonstige": 6
   },
   goldPrice: 2250, // Initialer Goldpreis in EUR
+  taxRevenue: 820, // Initiale Steuereinnahmen ca. 820 Mrd. EUR
 };

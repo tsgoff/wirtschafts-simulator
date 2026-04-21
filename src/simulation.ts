@@ -49,7 +49,8 @@ export function simulateYear(
   const privatizationRevenue = (policy.privatizationLevel > 40) ? (policy.privatizationLevel - 40) * 2 : 0;
   const otherRevenue = 100;
   
-  const totalRevenue = vatRevenue + corpRevenue + incomeRevenue + co2Revenue + energyTaxRevenue + privatizationRevenue + otherRevenue;
+  const taxRevenue = vatRevenue + corpRevenue + incomeRevenue + co2Revenue + energyTaxRevenue;
+  const totalRevenue = taxRevenue + privatizationRevenue + otherRevenue;
   
   // Expenses calculation
   // Retirement age reduces pension costs
@@ -359,5 +360,6 @@ export function simulateYear(
     population: newPopulation,
     housingShortage: newHousingShortage,
     goldPrice: Math.max(500, currentEconomy.goldPrice + (newInflation * 0.5) + (newInterestRate - 4.5) * -15 + (Math.random() - 0.5) * 40),
+    taxRevenue: taxRevenue,
   };
 }
